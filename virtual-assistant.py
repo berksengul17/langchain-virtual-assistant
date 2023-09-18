@@ -1,6 +1,7 @@
 import keyboard
 import os
 import tempfile
+from dotenv import load_dotenv
 
 import openai
 import sounddevice as sd
@@ -13,23 +14,21 @@ from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.utilities.zapier import ZapierNLAWrapper
 
+load_dotenv()
 
-set_api_key(os.environ["ELEVEN_LABS_API"])
-openai.api_key = os.environ["OPENAI_API_KEY"]
+set_api_key(os.environ['ELEVEN_LABS_API_KEY'])
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 duration = 5
 fs = 44100
 channels = 1 
 
-
 def record_audio(duration, fs, channels):
     print("Recording...")
     recording = sd.rec(int(duration * fs), samplerate=fs, channels=channels)
-    print("Recording ", recording.shape)
     sd.wait()
     print("Finished recording.")
     return recording
-
 
 def transcribe_audio(recording, fs):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
@@ -40,7 +39,6 @@ def transcribe_audio(recording, fs):
         os.remove(temp_audio.name)
     return transcript["text"].strip()
 
-
 def play_generated_audio(text, voice="Bella", model="eleven_monolingual_v1"):
     audio = generate(text=text, voice=voice, model=model)
     play(audio)
@@ -48,10 +46,10 @@ def play_generated_audio(text, voice="Bella", model="eleven_monolingual_v1"):
 
 if __name__ == '__main__':
 
-    llm = OpenAI(temperature=0)
+    llm = OpenAI(temperature=0.6)
     memory = ConversationBufferMemory(memory_key="chat_history")
 
-    zapier = ZapierNLAWrapper(zapier_nla_api_key=os.environ['ZAPIER_API'])
+    zapier = ZapierNLAWrapper(zapier_nla_api_key=os.environ['ZAPIER_API_KEY'])
     toolkit = ZapierToolkit.from_zapier_nla_wrapper(zapier)
 
     tools = toolkit.get_tools() + load_tools(["human"])
